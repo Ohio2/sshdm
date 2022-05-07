@@ -4,22 +4,31 @@ lookin=$HOME/.local/share/sshdm.txt
 #x(){
 #	xinit $1	
 #}
+errhandler(){
+	echo "Something is wrong with X/xinit"
+	echo "sshdm lookin: $lookin"
+	echo "kernel: $(uname -s -r)"
+	echo "gpu: $(lspci | grep -i nvidia || lspci | grep -i intel || lspci | grep -i amd)"
+	echo "Possible solutions: "
+	echo " Boot into an older kernel"
+	echo " Downgrade drivers"
+	echo " Fix Xorg configuration"
+}
 main(){
 	case $* in
 		--lookin) lookin=$2 ;;
-
 	esac
 	#user prefrence
-	filewc="$(wc -l $lookin)"
+	filewc="$(wc -l < $lookin)"
 	if [ $filewc = 1 ]; then
-		xinit $(cut -d "|" -f2 $lookin)
+		xinit $(cut -d "|" -f2 $lookin) || errhandler
 	else
 		cut -d "|" -f1 $lookin
 		echo -e "\n\n\n\n\n\n\n\n\n"
 		echo "[name of binary] choice: "
 		read $choice	
-		xinit "$(grep "$choice" $lookin | cut -d "|" -f2)"
+		xinit "$(grep "$choice" $lookin | cut -d "|" -f2)" || errhandler
 
 	fi
 }
-main
+main $*
