@@ -1,9 +1,6 @@
 #!/bin/zsh
 #set -x
 lookin=$HOME/.local/share/sshdm.txt
-#x(){
-#	xinit $1	
-#}
 errhandler(){
 	echo "Something is wrong with X/xinit"
 	echo "sshdm lookin: $lookin"
@@ -17,18 +14,19 @@ errhandler(){
 main(){
 	case $* in
 		--lookin) lookin=$2 ;;
+		*) ;;
 	esac
-	#user prefrence
-	filewc="$(wc -l < $lookin)"
-	if [ $filewc = 1 ]; then
-		xinit $(cut -d "|" -f2 $lookin) || errhandler
+	#user prefrence	
+	if [ $(wc -l < $lookin) = 1 ]; then
+		xinit $(cut -d "|" -f2 $lookin) 
 	else
 		cut -d "|" -f1 $lookin
 		echo -e "\n\n\n\n\n\n\n\n\n"
 		echo "[name of binary] choice: "
 		read $choice	
-		xinit "$(grep "$choice" $lookin | cut -d "|" -f2)" || errhandler
+		xinit "$(grep "$choice" $lookin | cut -d "|" -f2)" 
 
 	fi
 }
+#echo "preinit debug info: lookin: $lookin"
 main $*
