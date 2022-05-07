@@ -1,6 +1,6 @@
 #!/bin/zsh
 #set -x
-lookin=$HOME/.local/share/sshdm.txt
+lookin=$HOME/.local/share/sessions.sshdm
 errhandler(){
 	echo "Something is wrong with X/xinit"
 	echo "sshdm lookin: $lookin"
@@ -17,13 +17,14 @@ main(){
 		*) ;;
 	esac
 	#user prefrence	
-	if [ $(wc -l < $lookin) = 1 ]; then
-		xinit $(cut -d "|" -f2 $lookin) 
+	if [ $(grep -wv -e "$" $lookin | wc -l) = 1 ]; then
+		xinit $(grep -wv -e "$" $lookin | cut -d "|" -f2) 
 	else
-		cut -d "|" -f1 $lookin
+		grep -wv -e "$" $lookin | cut -d "|" -f1
 		echo -e "\n\n\n\n\n\n\n\n\n"
 		echo "[name of binary] choice: "
-		read $choice	
+		read $choice
+
 		xinit "$(grep "$choice" $lookin | cut -d "|" -f2)" 
 
 	fi
