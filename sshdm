@@ -9,7 +9,8 @@
 #
 #THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #set -x
-lookin=$HOME/.local/share/sessions.sshdm
+export lookin=$HOME/.local/share/sessions.sshdm
+export DISPLAY=:0
 errhandler(){
 	echo "Something is wrong with X/xinit"
 	echo "sshdm lookin: $lookin"
@@ -21,22 +22,35 @@ errhandler(){
 	echo " Fix Xorg configuration"
 }
 main(){
-	case $1 in
-		--lookin) lookin=$2 ;;
-		*) ;;
-	esac
+	while [ ! -z "$1" ]; do
+		case $1 in
+			--lookin) unset lookin ; lookin=$2 ;;
+			--dbg) dbg=True ;;
+			--disp) unset DISPLAY ; DISPLAY=$2 ;;
+			*) ;;
+		esac
+	shift
+	done
+	if [ $dbg = True ]; then 
+		echo "preinit debug info:"
+		echo "lookin: $lookin"
+		echo "dbg: $dbg"
+		echo "display: $DISPLAY"
+		echo -e "\n\n\n Press any key to continue."
+		read -s
+	fi
+
 	#user prefrence	
 	if [ $(grep -v "'''" $lookin | wc -l) = 1 ]; then
-		xinit $(grep -v "'''" $lookin | cut -d "|" -f2) 
+		DISPLAY=$DISPLAY xinit $(grep -v "'''" $lookin | cut -d "|" -f2) 
 	else
 		grep -v "'''" $lookin | cut -d "|" -f1
 		echo -e "\n\n\n\n\n\n\n\n\n"
 		echo "[name of binary] choice: "
 		read $choice
 
-		xinit "$(grep "$choice" $lookin | cut -d "|" -f2)" 
+		DISPLAY=$DISPLAY xinit "$(grep "$choice" $lookin | cut -d "|" -f2)" 
 
 	fi
 }
-#echo "preinit debug info: lookin: $lookin"
-main $*
+main $* 
