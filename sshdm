@@ -11,6 +11,7 @@
 #set -x
 export lookin=$HOME/.local/share/sessions.sshdm
 export DISPLAY=:0
+export dbg=False
 errhandler(){
 	echo "Something is wrong with X/xinit"
 	echo "sshdm lookin: $lookin"
@@ -42,13 +43,12 @@ main(){
 
 	#user prefrence	
 	if [ $(grep -v "'''" $lookin | wc -l) = 1 ]; then
-		DISPLAY=$DISPLAY xinit $(grep -v "'''" $lookin | cut -d "|" -f2) 
+		DISPLAY=$DISPLAY xinit $(grep -v "'''" $lookin | cut -d "|" -f2)
 	else
 		grep -v "'''" $lookin | cut -d "|" -f1
 		echo -e "\n\n\n\n\n\n\n\n\n"
 		echo "[name of binary] choice: "
 		read $choice
-
 		DISPLAY=$DISPLAY xinit "$(grep "$choice" $lookin | cut -d "|" -f2)" 
 
 	fi
