@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/usr/bin/env sh
 #Copyright 2022 Ohio2
 #
 #Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -13,25 +13,27 @@ export lookin=$HOME/.local/share/sessions.sshdm
 export DISPLAY=:0
 export VT=vt1
 export dbg=False
-export xconf=/etc/X11/xorg.conf
+export xflags
 #instead of xinit OR startx use dylan araps' x wrapper
 xwrap(){
 	# $1 - disp
 	# $2 - vt
 	# $3 - xflags
-	exec X $1 $2 &
+	exec X $1 $2 \ 
+		$3 &
 }
 main(){
 	while [ ! -z "$1" ]; do
 		case $1 in
-			--lookin) unset lookin ; lookin=$2 ;;
+			--lookin|-l) unset lookin ; lookin=$2 ;;
 			--dbg) dbg=True ;;
-			--disp) unset DISPLAY ; DISPLAY=$2 ;;
-			--vt) unset vt ; vt=$2 ;;
-			--xconf) unset xconf ; xconf=$2 ;;
-			--help) echo "--disp: set display"
-				echo "--lookin: look in file set by flag"
+			--disp|-d) unset DISPLAY ; DISPLAY=$2 ;;
+			--xflag|-xf) unset xflags ; xflags=${*:2} ;;
+			--vt) unset VT ; VT=$2 ;;
+			--help|-h) echo "--disp|-d: set display"
+				echo "--lookin|-l: look in the file set by flag"
 				echo "--vt: set virtual terminal for the x wrapper"
+				echo "--xflags|-xf: xorg flags"
 				exit 0 ;;
 			*) ;;
 		esac
@@ -42,23 +44,31 @@ main(){
 		echo "lookin: $lookin"
 		echo "dbg: $dbg"
 		echo "display: $DISPLAY"
-		echo -e "\n\n\n Press any key to continue."
+		echo "vt: $VT"
+		echo "xflags: $xflags"
+		echo "This will "
+		echo -e "\n\n\nPress any key to continue."
 		read -s
 	fi
 
 	#user prefrence	
 	if [ $(grep -v "'''" $lookin | wc -l) = 1 ]; then
-		xwrap $DISPLAY $VT
+		xwrap $DISPLAY $VT $xflags
 		DISPLAY=$DISPLAY VT=$VT $(grep -v "'''" $lookin | cut -d "|" -f2) 
-		pkill X
+		while [ ! ps -C $(grep -v "'''" $lookin | cut -d "|" -f2) 2>/dev/null ]; do 
+			pkill --signal QUIT X
+		done
 	else
 		grep -v "'''" $lookin | cut -d "|" -f1
 		echo -e "\n\n\n\n\n\n\n\n\n"
 		echo "[name of binary] choice: "
 		read $choice
-		xwrap $DISPLAY $VT 
-		DISPLAY=$DISPLAY VT=$VT $(grep "$choice" $lookin | cut -d "|" -f2)
-		pkill --signal QUIT X
+		result=$(grep "$choice" $lookin | cut -d "|" -f2)
+		xwrap $DISPLAY $VT $xflags 
+		DISPLAY=$DISPLAY VT=$VT $result 
+		while [ ! ps -C $result 2>/dev/null ]; do
+			pkill --signal QUIT X
+		done
 
 	fi
 }

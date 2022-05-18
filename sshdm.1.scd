@@ -8,6 +8,7 @@ sshdm was created to be a lilo-like display manager, that would be started after
 
 Example:
 echo "dwm | /usr/local/bin/dwm" > ~/.local/share/sessions.sshdm
+
 Explanation:
 
 Instead of using /usr/share/xsessions/ you are required to write an entry in
@@ -18,4 +19,6 @@ The 1st section is the wm name itself, can be anything, while the 2nd section mu
 
 # HOW IT WORKS
 
-Really simple. It just prompts the user what WM they want to use & passes that to xinit
+Not that simple nowadays.
+
+flags -> Prompt (if one wm skip) -> xwrap -> end
