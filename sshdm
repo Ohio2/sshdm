@@ -8,19 +8,20 @@
 #2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
 #
 #THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-set -x
+#set -x
 export lookin=$HOME/.local/share/sessions.sshdm
 export DISPLAY=:0
 export VT=vt1
 export dbg=False
-export xflags
 #instead of xinit OR startx use dylan araps' x wrapper
 xwrap(){
 	# $1 - disp
 	# $2 - vt
 	# $3 - xflags
-	exec X $1 $2 \ 
-		$3 &
+	# Xorg is not making a vt on automatic startup, sh -c could be
+	# a possible bypass.
+	sh -c 'exec X $1 $2 \
+		$3' &
 }
 main(){
 	while [ ! -z "$1" ]; do
@@ -28,12 +29,13 @@ main(){
 			--lookin|-l) unset lookin ; lookin=$2 ;;
 			--dbg) dbg=True ;;
 			--disp|-d) unset DISPLAY ; DISPLAY=$2 ;;
-			--xflag|-xf) unset xflags ; xflags=${*:2} ;;
+			#--xflag|-xf) unset xflags ; xflags=$2 ;;
+			#xf is temporarily disabled
 			--vt) unset VT ; VT=$2 ;;
 			--help|-h) echo "--disp|-d: set display"
 				echo "--lookin|-l: look in the file set by flag"
 				echo "--vt: set virtual terminal for the x wrapper"
-				echo "--xflags|-xf: xorg flags"
+				echo "--xflags|-xf: xorg flags (temporarily disabled)"
 				exit 0 ;;
 			*) ;;
 		esac
@@ -46,16 +48,15 @@ main(){
 		echo "display: $DISPLAY"
 		echo "vt: $VT"
 		echo "xflags: $xflags"
-		echo "This will "
-		echo -e "\n\n\nPress any key to continue."
-		read -s
+		echo "\n\n\nPress any key to continue or use ctrl-c to break."
+		read dbgct
 	fi
 
 	#user prefrence	
 	if [ $(grep -v "'''" $lookin | wc -l) = 1 ]; then
 		xwrap $DISPLAY $VT $xflags
 		DISPLAY=$DISPLAY VT=$VT $(grep -v "'''" $lookin | cut -d "|" -f2) 
-		while [ ! ps -C $(grep -v "'''" $lookin | cut -d "|" -f2) 2>/dev/null ]; do 
+		while [ ! ps -C $(grep -v "'''" $lookin | cut -d "|" -f2) 2>/dev/null ]; do
 			pkill --signal QUIT X
 		done
 	else
@@ -66,7 +67,7 @@ main(){
 		result=$(grep "$choice" $lookin | cut -d "|" -f2)
 		xwrap $DISPLAY $VT $xflags 
 		DISPLAY=$DISPLAY VT=$VT $result 
-		while [ ! ps -C $result 2>/dev/null ]; do
+		while [ ! ps -C $(grep -v "'''" $lookin | cut -d "|" -f2) 2>/dev/null ]; do 
 			pkill --signal QUIT X
 		done
 

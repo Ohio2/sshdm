@@ -17,6 +17,8 @@ lookin is passed.
 
 The 1st section is the wm name itself, can be anything, while the 2nd section must be the path to the binary
 
+Note:  the session file supports comments, (''')
+
 # HOW IT WORKS
 
 Not that simple nowadays.
