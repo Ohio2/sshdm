@@ -18,11 +18,16 @@ xwrap(){
 	# $1 - disp
 	# $2 - vt
 	# $3 - xflags
-	# Xorg is not making a vt on automatic startup, sh -c could be
-	# a possible bypass.
+	# VT is not made on a automatic startup, sh -c is a bypass.
 	sh -c 'exec X $1 $2 \
 		$3' &
 }
+mklog(){
+	mkdir -p $HOME/.local/var/log/sshdm
+	echo "lookin: $lookin\ndbg: $dbg\ndisplay: $DISPLAY\nvt: $VT\nxflags: $xflags" > $HOME/.local/var/log/sshdm/sshdm.log
+	gzip $HOME/.local/var/log/sshdm/sshdm.log &
+}
+
 main(){
 	while [ ! -z "$1" ]; do
 		case $1 in
@@ -48,6 +53,7 @@ main(){
 		echo "display: $DISPLAY"
 		echo "vt: $VT"
 		echo "xflags: $xflags"
+		mklog
 		echo "\n\n\nPress any key to continue or use ctrl-c to break."
 		read dbgct
 	fi
