@@ -14,15 +14,18 @@ export logdir=$HOME/.local/var/log/sshdm
 export DISPLAY=:0
 export VT=vt1
 export dbg=False
+export timeout=0
+export defsession=0
 #instead of xinit OR startx use dylan araps' x wrapper
 xwrap(){
 	# $1 - disp
 	# $2 - vt
 	# $3 - xflags
 	# VT is not made on a automatic startup, sh -c is a bypass.
-	sh -c 'exec X $1 $2 \
-		$3' &
+	sh -c "exec X $1 $2 \
+		$3" &
 }
+
 mklog(){
 	# $1 - log dir
 	# $o - generated file
@@ -31,6 +34,7 @@ mklog(){
 	mkdir -p $1
 	echo "lookin: $lookin\ndbg: $dbg\ndisplay: $DISPLAY\nvt: $VT\nxflags: $xflags" > $1/$o
 	gzip $1/$o &
+
 }
 
 main(){
@@ -40,13 +44,15 @@ main(){
 			--dbg) dbg=True ;;
 			--logdir|-log) unset logdir ; logdir=$2 ;;
 			--disp|-d) unset DISPLAY ; DISPLAY=$2 ;;
-			--xflags|-xf) unset xflags ; o=$(echo $* | sed 's|-xf ||g' | sed 's|--xflags ||g') ; xflags=$o ;;	
+			--xflags|-xf) unset xflags ; o=$(echo $* | sed 's|-xf ||g' | sed 's|--xflags ||g') ; xflags=$o ;;
+			#-t|--timeout) unset timeout ; timeout=$2 ;; # timeout for logging in (0 = no wait)
+			#-d|--default-session) unset defsession ; defsession=$2 ;; # default session for logging in (0 = no defaults | 1.. = must be position.)
 			--vt) unset VT ; VT=$2 ;;
 			--help|-h) echo "--disp|-d: set display"
 				echo "--lookin|-l: look in the file set by the flag"
 				echo "--logdir|-log: log directory"
 				echo "--vt: set virtual terminal for the x wrapper"
-				echo "--xflags|-xf: xorg flags)"
+				echo "--xflags|-xf: xorg flags"
 				exit 0 ;;
 			*) ;;
 		esac
@@ -68,20 +74,17 @@ main(){
 	if [ $(grep -v "'''" $lookin | wc -l) = 1 ]; then
 		xwrap $DISPLAY $VT $xflags
 		DISPLAY=$DISPLAY VT=$VT $(grep -v "'''" $lookin | cut -d "|" -f2) 
-		while [ ! ps -C $(grep -v "'''" $lookin | cut -d "|" -f2) 2>/dev/null ]; do
-			pkill --signal QUIT X
-		done
+		pkill --signal QUIT X
 	else
 		grep -v "'''" $lookin | cut -d "|" -f1
 		echo -e "\n\n\n\n\n\n\n\n\n"
 		echo "[name of binary] choice: "
+		#if [ ! $timeout = 0 ]; then; timeout ${timeout}s read $choice; ; else; read $choice; fi
 		read $choice
 		result=$(grep "$choice" $lookin | cut -d "|" -f2)
 		xwrap $DISPLAY $VT $xflags 
 		DISPLAY=$DISPLAY VT=$VT $result 
-		while [ ! ps -C $(grep -v "'''" $lookin | cut -d "|" -f2) 2>/dev/null ]; do 
-			pkill --signal QUIT X
-		done
+		pkill --signal QUIT X
 
 	fi
 }
